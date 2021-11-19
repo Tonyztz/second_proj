@@ -40,7 +40,7 @@ class PPMI_normalization():
         print(self.dataset_normalized_labeled.shape)
         np.save('/home/zhangtongze/homework/datasets_class/processed_npy/second_proj/' + 'ppmi_raw_normalized_data.npy',self.dataset_normalized_labeled)
 
-class ADNI_normalization():
+class ADNI_process():
     def __init__(self):
         self.adni_ad_path = '/home/zhangtongze/homework/datasets_class/npy/ADNI_AD.npy'
         self.adni_nc_path = '/home/zhangtongze/homework/datasets_class/npy/ADNI_NC.npy'
@@ -52,6 +52,7 @@ class ADNI_normalization():
         print(self.dataset_all.shape)
         self.normalization()
         self.add_label()
+        self.split_train_test(0.8)
 
     def normalization(self):
         dataset_mean = np.mean(self.dataset_all)
@@ -64,12 +65,29 @@ class ADNI_normalization():
             label[i] = 1
         self.dataset_normalized_labeled = np.hstack((self.dataset_normalize_all,label))
         print(self.dataset_normalized_labeled.shape)
-        print(self.dataset_normalized_labeled)
-        np.save('/home/zhangtongze/homework/datasets_class/processed_npy/second_proj/' + 'adni_raw_normalized_data.npy',self.dataset_normalized_labeled)
+        # print(self.dataset_normalized_labeled)
+
+    def split_train_test(self,radio):
+        np.random.shuffle(self.dataset_normalized_labeled)
+        train = self.dataset_normalized_labeled[:int(self.dataset_normalized_labeled.shape[0] * radio),:]
+        test = self.dataset_normalized_labeled[int(self.dataset_normalized_labeled.shape[0] * radio):,:]
+        print(train.shape)
+        print(test.shape)
+        train_ad = train[np.where(train[:,-1] == 1)]
+        train_nc = train[np.where(train[:,-1] == 0)]
+        test_ad = test[np.where(test[:,-1] == 1)]
+        test_nc = test[np.where(test[:,-1] == 0)]
+        print(train_ad.shape)
+        print(train_nc.shape)
+        print(test_ad.shape)
+        print(test_nc.shape)
+
+        
+
 
 
 
     
 if __name__ =='__main__':
     # model = PPMI_normalization()
-    ADNI_normalization()
+    ADNI_process()
