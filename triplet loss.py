@@ -225,3 +225,4 @@ for i in range(label.shape[0]):
         acc += 1
 
 print(acc)
+
