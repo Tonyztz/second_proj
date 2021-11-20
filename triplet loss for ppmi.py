@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -25,11 +26,12 @@ if device.type == "cuda":
     torch.cuda.get_device_name()
 
 embedding_dims = 2
-batch_size = 15
-epochs = 60
+batch_size = 8
+epochs = 25
 
 
-dataset = np.load('/home/zhangtongze/homework/datasets_class/processed_npy/second_proj/adni_raw_normalized_data.npy')
+# dataset = np.load('/home/zhangtongze/homework/datasets_class/processed_npy/second_proj/ppmi_raw_normalized_data.npy')
+dataset = np.load('/home/zhangtongze/homework/datasets_class/processed_npy/second_proj/data_addnoise.npy')
 np.random.shuffle(dataset)
 train_df = dataset[:int(dataset.shape[0] * 0.8),:]
 test_df = dataset[int(dataset.shape[0] * 0.8):,:]
@@ -114,19 +116,28 @@ class Network(nn.Module):
             nn.PReLU(),
             nn.MaxPool1d(2),
             nn.Dropout(0.3),
-            nn.Conv1d(32, 64, 4, stride = 2),
+            nn.Conv1d(32, 64, 3, stride = 2),
             nn.PReLU(),
             nn.MaxPool1d(2),
             nn.Dropout(0.3)
         )
         
         self.fc = nn.Sequential(
-            nn.Linear(186, 128),
+            nn.Linear(294, 1024),
+            nn.PReLU(),
+            nn.Linear(1024, 512),
+            nn.PReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.PReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 128),
             nn.PReLU(),
             nn.Linear(128, 64),
             nn.PReLU(),
             nn.Linear(64, 32),
             nn.PReLU(),
+            nn.Dropout(0.3),
             nn.Linear(32, 16),
             nn.PReLU(),
             nn.Linear(16, emb_dim)
@@ -136,7 +147,7 @@ class Network(nn.Module):
         #x = self.conv(x)
         # x = x.view(-1, 64*21*21)
         x = x.float()
-        # x = x.view(1,1,-1)
+        # x = x.view(-1,1,294)
         # x = self.conv(x)
         # x = x.view(1,-1)
         x = self.fc(x)
@@ -151,7 +162,7 @@ model = Network(embedding_dims)
 model.apply(init_weights)
 model = torch.jit.script(model).to(device)
 
-optimizer = optim.Adam(model.parameters(), lr=0.003)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = torch.jit.script(TripletLoss())
 
 model.train()
