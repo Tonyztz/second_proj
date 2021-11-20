@@ -30,6 +30,7 @@ epochs = 25
 
 
 dataset = np.load('/home/zhangtongze/homework/datasets_class/processed_npy/second_proj/adni_raw_normalized_data.npy')
+np.random.shuffle(dataset)
 train_df = dataset[:int(dataset.shape[0] * 0.8),:]
 test_df = dataset[int(dataset.shape[0] * 0.8):,:]
 
@@ -73,7 +74,7 @@ class MNIST(Dataset):
             return anchor_features
 
     def __len__(self):
-        return 81
+        return self.dataset.shape[0]
 
 train_ds = MNIST(train_df, 
                  train=True,
@@ -193,20 +194,34 @@ plt.show()
 plt.savefig('/home/zhangtongze/homework/result_visulize/train_result.png')
 
 
-# tree = XGBClassifier(seed=2020)
-# tree.fit(train_results, labels)
+tree = XGBClassifier(seed=2020)
+tree.fit(train_results, labels)
 
-# test_results = []
-# test_labels = []
+test_results = []
+test_labels = []
 
-# model.eval()
-# with torch.no_grad():
-#     for features in test_loader:
-#         test_results.append(model(features.to(device)).cpu().numpy())
+model.eval()
+with torch.no_grad():
+    for features in test_loader:
+        test_results.append(model(features.to(device)).cpu().numpy())
         
-# test_results = np.concatenate(test_results)
+test_results = np.concatenate(test_results)
 
-# plt.figure(figsize=(15, 10), facecolor="azure")
-# plt.scatter(test_results[:, 0], test_results[:, 1], label=label)
+plt.figure(figsize=(15, 10), facecolor="azure")
+plt.scatter(test_results[:, 0], test_results[:, 1], label=label)
+plt.savefig('/home/zhangtongze/homework/result_visulize/test_result.png')
 
-# test_results.shape
+
+
+test_results.shape
+label = tree.predict(test_results)
+print(label.shape)
+print(label)
+print(test_df[:,-1])
+
+acc = 0
+for i in range(label.shape[0]):
+    if label[i] == test_df[i,-1]:
+        acc += 1
+
+print(acc)
